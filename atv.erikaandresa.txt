@@ -1,0 +1,166 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+typedef struct {
+    int matricula;
+    char nome[100];
+    char curso[100];
+    char endereco[100];
+    char ativo; // 'S' para ativo, 'F' para inativo
+} Aluno;
+
+void cadastrarAluno(Aluno **alunos, int *quantidade);
+void removerAluno(Aluno *alunos, int quantidade);
+void alterarCurso(Aluno *alunos, int quantidade);
+void alterarEndereco(Aluno *alunos, int quantidade);
+void relatorio(Aluno *alunos, int quantidade);
+int encontrarIndice(Aluno *alunos, int quantidade, int matricula);
+
+int main() {
+    Aluno *alunos = NULL;
+    int quantidade = 0;
+    int opcao;
+
+    do {
+        printf("\nMenu:\n");
+        printf("1 - Cadastrar aluno\n");
+        printf("2 - Remover aluno\n");
+        printf("3 - Alterar curso\n");
+        printf("4 - Alterar endereco\n");
+        printf("5 - Relatorio de alunos ativos\n");
+        printf("0 - Sair\n");
+        printf("Escolha uma opcao: ");
+        scanf("%d", &opcao);
+        getchar(); // Limpa o buffer
+
+        switch (opcao) {
+            case 1:
+                cadastrarAluno(&alunos, &quantidade);
+                break;
+            case 2:
+                removerAluno(alunos, quantidade);
+                break;
+            case 3:
+                alterarCurso(alunos, quantidade);
+                break;
+            case 4:
+                alterarEndereco(alunos, quantidade);
+                break;
+            case 5:
+                relatorio(alunos, quantidade);
+                break;
+            case 0:
+                printf("Saindo do programa...\n");
+                break;
+            default:
+                printf("Opcao Invalida\n");
+        }
+
+    } while (opcao != 0);
+
+    free(alunos);
+    return 0;
+}
+
+void cadastrarAluno(Aluno **alunos, int *quantidade) {
+    *alunos = realloc(*alunos, (*quantidade + 1) * sizeof(Aluno));
+
+    if (*alunos == NULL) {
+        printf("Erro de memoria.\n");
+        exit(1);
+    }
+
+    Aluno *novo = &(*alunos)[*quantidade];
+
+    printf("Matricula: ");
+    scanf("%d", &novo->matricula);
+    getchar();
+
+    printf("Nome: ");
+    fgets(novo->nome, sizeof(novo->nome), stdin);
+    novo->nome[strcspn(novo->nome, "\n")] = '\0';
+
+    printf("Curso: ");
+    fgets(novo->curso, sizeof(novo->curso), stdin);
+    novo->curso[strcspn(novo->curso, "\n")] = '\0';
+
+    printf("Endereco: ");
+    fgets(novo->endereco, sizeof(novo->endereco), stdin);
+    novo->endereco[strcspn(novo->endereco, "\n")] = '\0';
+
+    novo->ativo = 'S';
+    (*quantidade)++;
+
+    printf("Aluno cadastrado com sucesso.\n");
+}
+
+void removerAluno(Aluno *alunos, int quantidade) {
+    int matricula;
+    printf("Digite a matricula do aluno a ser removido: ");
+    scanf("%d", &matricula);
+
+    int pos = encontrarIndice(alunos, quantidade, matricula);
+    if (pos != -1 && alunos[pos].ativo == 'S') {
+        alunos[pos].ativo = 'F';
+        printf("Aluno removido.\n");
+    } else {
+        printf("Aluno nao encontrado ou ja inativo.\n");
+    }
+}
+
+void alterarCurso(Aluno *alunos, int quantidade) {
+    int matricula;
+    printf("Digite a matricula do aluno: ");
+    scanf("%d", &matricula);
+    getchar();
+
+    int pos = encontrarIndice(alunos, quantidade, matricula);
+    if (pos != -1 && alunos[pos].ativo == 'S') {
+        printf("Novo curso: ");
+        fgets(alunos[pos].curso, sizeof(alunos[pos].curso), stdin);
+        alunos[pos].curso[strcspn(alunos[pos].curso, "\n")] = '\0';
+        printf("Curso alterado.\n");
+    } else {
+        printf("Aluno nao encontrado ou inativo.\n");
+    }
+}
+
+void alterarEndereco(Aluno *alunos, int quantidade) {
+    int matricula;
+    printf("Digite a matricula do aluno: ");
+    scanf("%d", &matricula);
+    getchar();
+
+    int pos = encontrarIndice(alunos, quantidade, matricula);
+    if (pos != -1 && alunos[pos].ativo == 'S') {
+        printf("Novo endereco: ");
+        fgets(alunos[pos].endereco, sizeof(alunos[pos].endereco), stdin);
+        alunos[pos].endereco[strcspn(alunos[pos].endereco, "\n")] = '\0';
+        printf("Endereco alterado.\n");
+    } else {
+        printf("Aluno nao encontrado ou inativo.\n");
+    }
+}
+
+void relatorio(Aluno *alunos, int quantidade) {
+    printf("\n--- Alunos Ativos ---\n");
+    for (int i = 0; i < quantidade; i++) {
+        if (alunos[i].ativo == 'S') {
+            printf("Matricula: %d\n", alunos[i].matricula);
+            printf("Nome: %s\n", alunos[i].nome);
+            printf("Curso: %s\n", alunos[i].curso);
+            printf("Endereco: %s\n", alunos[i].endereco);
+            printf("----------------------\n");
+        }
+    }
+}
+
+int encontrarIndice(Aluno *alunos, int quantidade, int matricula) {
+    for (int i = 0; i < quantidade; i++) {
+        if (alunos[i].matricula == matricula) {
+            return i;
+        }
+    }
+    return -1;
+}
