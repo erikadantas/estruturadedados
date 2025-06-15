@@ -1,0 +1,171 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+    Aluna: Erika Andresa Santos Dantas
+    Estrutura de dados utilizada: Fila (implementada com lista encadeada)
+    Justificativa: Como os carros entram e saem pela mesma extremidade, a fila representa melhor o comportamento de uma vaga longa sem saída, em que o primeiro a entrar é o último a sair (fila com restrição de acesso).
+*/
+
+#define TAM 100
+
+typedef struct carro {
+    char nome[TAM];
+    char cpf[TAM];
+    char marca[TAM];
+    char modelo[TAM];
+    char placa[TAM];
+    struct carro* prox;
+} Carro;
+
+typedef struct {
+    Carro* inicio;
+    Carro* fim;
+} Vaga;
+
+void iniciarVaga(Vaga* vaga) {
+    vaga->inicio = NULL;
+    vaga->fim = NULL;
+}
+
+Carro* criarCarro() {
+    Carro* novo = (Carro*)malloc(sizeof(Carro));
+    if (novo == NULL) {
+        printf("Erro ao alocar memória.\n");
+        exit(1);
+    }
+
+    printf("Nome do proprietário: ");
+    getchar(); // Limpa buffer
+    fgets(novo->nome, TAM, stdin);
+    novo->nome[strcspn(novo->nome, "\n")] = 0;
+
+    printf("CPF do proprietário: ");
+    fgets(novo->cpf, TAM, stdin);
+    novo->cpf[strcspn(novo->cpf, "\n")] = 0;
+
+    printf("Marca do carro: ");
+    fgets(novo->marca, TAM, stdin);
+    novo->marca[strcspn(novo->marca, "\n")] = 0;
+
+    printf("Modelo do carro: ");
+    fgets(novo->modelo, TAM, stdin);
+    novo->modelo[strcspn(novo->modelo, "\n")] = 0;
+
+    printf("Placa: ");
+    fgets(novo->placa, TAM, stdin);
+    novo->placa[strcspn(novo->placa, "\n")] = 0;
+
+    novo->prox = NULL;
+
+    return novo;
+}
+
+void adicionarCarro(Vaga* vaga) {
+    Carro* novo = criarCarro();
+    if (vaga->fim == NULL) {
+        vaga->inicio = novo;
+        vaga->fim = novo;
+    } else {
+        vaga->fim->prox = novo;
+        vaga->fim = novo;
+    }
+
+    printf("Carro adicionado com sucesso!\n");
+}
+
+void removerCarro(Vaga* vaga) {
+    if (vaga->inicio == NULL) {
+        printf("A vaga está vazia.\n");
+        return;
+    }
+
+    Carro* temp = vaga->inicio;
+    vaga->inicio = vaga->inicio->prox;
+
+    if (vaga->inicio == NULL) {
+        vaga->fim = NULL;
+    }
+
+    printf("Carro removido:\n");
+    printf("Placa: %s\n", temp->placa);
+    free(temp);
+}
+
+void listarCarros(Vaga* vaga) {
+    if (vaga->inicio == NULL) {
+        printf("Nenhum carro estacionado na vaga.\n");
+        return;
+    }
+
+    printf("Lista de carros estacionados:\n");
+    Carro* atual = vaga->inicio;
+    while (atual != NULL) {
+        printf("-----\n");
+        printf("Nome: %s\n", atual->nome);
+        printf("CPF: %s\n", atual->cpf);
+        printf("Marca: %s\n", atual->marca);
+        printf("Modelo: %s\n", atual->modelo);
+        printf("Placa: %s\n", atual->placa);
+        atual = atual->prox;
+    }
+}
+
+void menu() {
+    Vaga vaga1, vaga2;
+    iniciarVaga(&vaga1);
+    iniciarVaga(&vaga2);
+
+    int opcao, numeroVaga;
+
+    while (1) {
+        printf("\n------ MENU ESTACIONAMENTO ------\n");
+        printf("1 - Adicionar carro na vaga\n");
+        printf("2 - Remover carro da vaga\n");
+        printf("3 - Listar carros da vaga\n");
+        printf("0 - Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+
+        if (opcao == 0) {
+            break;
+        }
+
+        printf("Qual vaga? (1 ou 2): ");
+        scanf("%d", &numeroVaga);
+
+        Vaga* vagaSelecionada = NULL;
+
+        if (numeroVaga == 1) {
+            vagaSelecionada = &vaga1;
+        } else if (numeroVaga == 2) {
+            vagaSelecionada = &vaga2;
+        } else {
+            printf("Vaga inválida!\n");
+            continue;
+        }
+
+        switch (opcao) {
+            case 1:
+                adicionarCarro(vagaSelecionada);
+                break;
+            case 2:
+                removerCarro(vagaSelecionada);
+                break;
+            case 3:
+                listarCarros(vagaSelecionada);
+                break;
+            default:
+                printf("Opção inválida!\n");
+                break;
+        }
+    }
+
+    printf("Programa encerrado.\n");
+}
+
+int main() {
+    menu();
+    return 0;
+}
