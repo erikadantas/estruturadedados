@@ -1,0 +1,159 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define TAM_NOME 100
+#define TAM_CURSO 100
+
+typedef struct aluno {
+    int matricula;
+    char nome[TAM_NOME];
+    char curso[TAM_CURSO];
+    struct aluno* prox;
+} Aluno;
+
+Aluno* adicionarAluno(int mat, const char* nome, const char* curso) {
+    Aluno* novoAluno = malloc(sizeof(Aluno));
+    if (!novoAluno) {
+        printf("Erro ao alocar memória.\n");
+        exit(1);
+    }
+
+    novoAluno->matricula = mat;
+    strncpy(novoAluno->nome, nome, TAM_NOME);
+    strncpy(novoAluno->curso, curso, TAM_CURSO);
+    novoAluno->prox = NULL;
+    return novoAluno;
+}
+
+void inserirNaLista(Aluno** lista, int mat, const char* nome, const char* curso) {
+    Aluno* novo = adicionarAluno(mat, nome, curso);
+    novo->prox = *lista;
+    *lista = novo;
+}
+
+void removerAluno(Aluno** lista, int mat) {
+    Aluno* atual = *lista;
+    Aluno* anterior = NULL;
+
+    while (atual != NULL && atual->matricula != mat) {
+        anterior = atual;
+        atual = atual->prox;
+    }
+
+    if (atual == NULL) {
+        printf("Aluno não encontrado.\n");
+        return;
+    }
+
+    if (anterior == NULL) {
+        *lista = atual->prox;
+    } else {
+        anterior->prox = atual->prox;
+    }
+
+    free(atual);
+    printf("Aluno removido.\n");
+}
+
+void mostrarAlunos(Aluno* lista) {
+    if (!lista) {
+        printf("Nenhum aluno cadastrado.\n");
+        return;
+    }
+
+    printf("\n--- Alunos Cadastrados ---\n");
+    while (lista) {
+        printf("Matrícula: %d\n", lista->matricula);
+        printf("Nome: %s\n", lista->nome);
+        printf("Curso: %s\n", lista->curso);
+        printf("----------------------------\n");
+        lista = lista->prox;
+    }
+}
+
+void salvarEmArquivo(Aluno* lista, const char* nomeArq) {
+    FILE* arq = fopen(nomeArq, "w");
+    if (!arq) {
+        printf("Erro ao abrir o arquivo para salvar.\n");
+        return;
+    }
+
+    while (lista) {
+        fprintf(arq, "%d;%s;%s\n", lista->matricula, lista->nome, lista->curso);
+        lista = lista->prox;
+    }
+
+    fclose(arq);
+}
+
+Aluno* carregarArquivo(const char* nomeArq) {
+    FILE* arq = fopen(nomeArq, "r");
+    if (!arq) return NULL;
+
+    Aluno* lista = NULL;
+    int mat;
+    char nome[TAM_NOME];
+    char curso[TAM_CURSO];
+
+    while (fscanf(arq, "%d;%99[^;];%99[^\n]\n", &mat, nome, curso) == 3) {
+        inserirNaLista(&lista, mat, nome, curso);
+    }
+
+    fclose(arq);
+    return lista;
+}
+
+int main() {
+    Aluno* lista = carregarArquivo("alunos.txt");
+    char op;
+
+    while (1) {
+        printf("\nMenu:\n");
+        printf("i - Inserir aluno\n");
+        printf("d - Deletar aluno\n");
+        printf("l - Listar alunos\n");
+        printf("s - Sair e salvar\n");
+        printf("Opcao: ");
+        scanf(" %c", &op);
+
+        if (op == 'i') {
+            int mat;
+            char nome[TAM_NOME], curso[TAM_CURSO];
+
+            printf("Matrícula: ");
+            scanf("%d", &mat);
+            getchar();
+
+            printf("Nome: ");
+            fgets(nome, TAM_NOME, stdin);
+            nome[strcspn(nome, "\n")] = 0;
+
+            printf("Curso: ");
+            fgets(curso, TAM_CURSO, stdin);
+            curso[strcspn(curso, "\n")] = 0;
+
+            inserirNaLista(&lista, mat, nome, curso);
+            printf("Aluno inserido.\n");
+
+        } else if (op == 'd') {
+            int mat;
+            printf("Digite a matrícula do aluno a remover: ");
+            scanf("%d", &mat);
+            removerAluno(&lista, mat);
+
+        } else if (op == 'l') {
+            mostrarAlunos(lista);
+
+        } else if (op == 's') {
+            salvarEmArquivo(lista, "alunos.txt");
+            printf("Dados salvos. Encerrando.\n");
+            break;
+
+        } else {
+            printf("Opção inválida.\n");
+        }
+    }
+
+    return 0;
+}
